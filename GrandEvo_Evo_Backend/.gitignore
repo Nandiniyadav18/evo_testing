@@ -1,0 +1,19 @@
+
+# Environment variables
+.env
+.env.*
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build files
+dist/
+build/
+.vite/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

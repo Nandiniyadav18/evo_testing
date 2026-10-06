@@ -1,0 +1,18 @@
+{
+  "name": "grandevo-evo-backend",
+  "version": "1.0.0",
+  "description": "GrandEvo Evo AI Business Agent Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.27.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0",
+    "openai": "^6.0.0"
+  }
+}
