@@ -53,39 +53,60 @@ async function generateAiResponse({ message, history, profile, page, source }) {
     if (gemini && hasGeminiKey) {
         try {
             console.log(`→ Evo message received: ${message}`);
-            const response = await gemini.models.generateContent({
-                model: GEMINI_MODEL,
-                contents,
-                config: {
-                    systemInstruction: finalInstructions,
-                    temperature: 0.7,
-                    maxOutputTokens: 700,
-                    responseMimeType: "application/json",
-                    responseSchema
-                }
-            });
+            const candidateModels = Array.from(new Set([
+                "gemini-3.5-flash",
+                GEMINI_MODEL,
+                "gemini-3.1-flash-lite",
+                "gemini-3.8-flash"
+            ])).filter(Boolean);
 
-            const rawText = response.text || "";
-            if (rawText) {
+            let lastError = null;
+            for (const modelToUse of candidateModels) {
                 try {
-                    aiData = JSON.parse(rawText);
-                    console.log("✓ Gemini response received");
-                } catch (parseErr) {
-                    console.warn("Evo Gemini JSON parse notice:", parseErr.message);
-                    aiData = {
-                        reply: rawText,
-                        intent: "",
-                        interest: "",
-                        requirement: "",
-                        company: "",
-                        industry: "",
-                        name: "",
-                        preferredContact: "",
-                        appointmentRequested: false,
-                        shouldAskContact: false,
-                        leadSignal: "Exploring"
-                    };
+                    const response = await gemini.models.generateContent({
+                        model: modelToUse,
+                        contents,
+                        config: {
+                            systemInstruction: finalInstructions,
+                            temperature: 0.7,
+                            maxOutputTokens: 2048,
+                            responseMimeType: "application/json",
+                            responseSchema
+                        }
+                    });
+
+                    const rawText = response.text || "";
+                    if (rawText) {
+                        try {
+                            aiData = JSON.parse(rawText);
+                            console.log(`✓ Gemini response received using [${modelToUse}]`);
+                            break;
+                        } catch (parseErr) {
+                            console.warn("Evo Gemini JSON parse notice:", parseErr.message);
+                            aiData = {
+                                reply: rawText,
+                                intent: "",
+                                interest: "",
+                                requirement: "",
+                                company: "",
+                                industry: "",
+                                name: "",
+                                preferredContact: "",
+                                appointmentRequested: false,
+                                shouldAskContact: false,
+                                leadSignal: "Exploring"
+                            };
+                            break;
+                        }
+                    }
+                } catch (candidateErr) {
+                    lastError = candidateErr;
+                    console.warn(`⚠️ Model [${modelToUse}] notice: ${candidateErr.message?.substring(0, 100) || candidateErr}`);
                 }
+            }
+
+            if (!aiData && lastError) {
+                console.warn("⚠️ All Gemini models exhausted. Activating fallback.");
             }
         } catch (geminiError) {
             console.warn("⚠️ Gemini AI service notice:", geminiError.message || geminiError);

@@ -5,10 +5,11 @@ const dotenv = require("dotenv");
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
-const rawModel = (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim();
-const normalizedModel = (rawModel.includes("3.8") || rawModel.includes("3.5"))
-    ? "gemini-2.5-flash"
-    : rawModel;
+const rawModel = (process.env.GEMINI_MODEL || "gemini-3.5-flash").trim();
+// Automatically migrate discontinued models (2.5, 1.5, 2.0) to gemini-3.5-flash
+const normalizedModel = (rawModel.includes("2.5") || rawModel.includes("1.5") || rawModel.includes("2.0"))
+    ? "gemini-3.5-flash"
+    : (rawModel || "gemini-3.5-flash");
 
 const env = {
     PORT: process.env.PORT || 5000,
